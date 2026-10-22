@@ -125,6 +125,9 @@ class Routes {
           builder: (context) => ScriptDetailPage(
             title: (settings.arguments as Map)["title"],
             path: (settings.arguments as Map)["path"],
+            paths: (settings.arguments as Map)["paths"] is List<String>
+                ? List<String>.from((settings.arguments as Map)["paths"])
+                : null,
           ),
         );
       case routeTaskDetail:

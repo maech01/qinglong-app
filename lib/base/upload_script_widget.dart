@@ -61,6 +61,9 @@ class UploadScriptWidgetState extends ConsumerState<UploadScriptWidget>
       if (response.bean == null || response.bean!.isEmpty) {
         return;
       }
+      // Same structural fix as the script browser: build folder paths from the
+      // tree so uploads into folders two or more levels deep resolve correctly.
+      response.bean = ScriptData.normalizeTree(response.bean!);
       void lookNode(ScriptData node) {
         if (node.type != "directory") {
           String name = node.parent;

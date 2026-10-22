@@ -31,10 +31,14 @@ class ScriptDetailPage extends ConsumerStatefulWidget {
   final String title;
   final String? path;
 
+  /// Candidate directories (most trustworthy first) used to locate the file.
+  final List<String>? paths;
+
   const ScriptDetailPage({
     Key? key,
     required this.title,
     this.path,
+    this.paths,
   }) : super(key: key);
 
   @override
@@ -43,6 +47,12 @@ class ScriptDetailPage extends ConsumerStatefulWidget {
 
 class _ScriptDetailPageState extends ConsumerState<ScriptDetailPage> with LazyLoadState<ScriptDetailPage> {
   String? content;
+
+  /// Directory that actually yielded the file, used for follow-up actions
+  /// (add-to-task, delete) so they don't repeat the original path mistake.
+  String? _resolvedPath;
+
+  String get _effectivePath => _resolvedPath ?? widget.path ?? "";
 
   List<Widget> actions = [];
 
@@ -86,7 +96,7 @@ class _ScriptDetailPageState extends ConsumerState<ScriptDetailPage> with LazyLo
               "未获取到脚本内容,请稍候重试".toast();
               return;
             }
-            String command = "task ${widget.path}${(widget.path != null && widget.path!.isNotEmpty) ? p.separator : ""}${widget.title} ";
+            String command = "task ${_effectivePath}${_effectivePath.isNotEmpty ? p.separator : ""}${widget.title} ";
             String? cron = ScriptUploadPageState.getCronString(content!, widget.title);
 
             Navigator.of(context).push(
@@ -115,7 +125,7 @@ class _ScriptDetailPageState extends ConsumerState<ScriptDetailPage> with LazyLo
               Routes.routeScriptUpdate,
               arguments: {
                 "title": widget.title,
-                "path": widget.path,
+                "path": _effectivePath,
                 "content": content,
               },
             ).then((value) {
@@ -188,9 +198,9 @@ class _ScriptDetailPageState extends ConsumerState<ScriptDetailPage> with LazyLo
                       }
                       HttpResponse<NullResponse> result;
                       if (systemBean.isUpperVersion2_14_5()) {
-                        result = await SingleAccountPageState.ofApi(context).delScriptNewVersion(widget.title, widget.path ?? "");
+                        result = await SingleAccountPageState.ofApi(context).delScriptNewVersion(widget.title, _effectivePath);
                       } else {
-                        result = await SingleAccountPageState.ofApi(context).delScript(widget.title, widget.path ?? "");
+                        result = await SingleAccountPageState.ofApi(context).delScript(widget.title, _effectivePath);
                       }
                       if (result.success) {
                         "删除成功".toast();
@@ -289,18 +299,51 @@ class _ScriptDetailPageState extends ConsumerState<ScriptDetailPage> with LazyLo
 
   GlobalKey<CodeMirrorViewState> codeKey = GlobalKey();
 
-  Future<void> loadData() async {
-    HttpResponse<String> response = await SingleAccountPageState.ofApi(context).scriptDetail(
-      widget.title,
-      widget.path,
-    );
-
-    if (response.success) {
-      content = response.bean;
-      setState(() {});
-    } else {
-      response.message?.toast();
+  /// Candidate directories, deduplicated and ordered by trustworthiness.
+  List<String> get _candidates {
+    final List<String> out = <String>[];
+    void add(String? value) {
+      if (value == null) return;
+      final String v = value.trim();
+      if (out.contains(v)) return;
+      out.add(v);
     }
+
+    for (final String p in widget.paths ?? const <String>[]) {
+      add(p);
+    }
+    add(widget.path);
+    if (out.isEmpty) out.add("");
+    return out;
+  }
+
+  Future<void> loadData() async {
+    HttpResponse<String>? last;
+    for (final String candidate in _candidates) {
+      final HttpResponse<String> response =
+          await SingleAccountPageState.ofApi(context).scriptDetail(widget.title, candidate);
+      last = response;
+      // The panel answers 200 with an empty body for a path that does not
+      // exist (getFileContentByName swallows ENOENT), so empty content means
+      // "keep looking" rather than "done".
+      if (response.success && (response.bean?.isNotEmpty ?? false)) {
+        _resolvedPath = candidate;
+        content = response.bean;
+        setState(() {});
+        return;
+      }
+    }
+
+    if (last != null && last.success) {
+      _resolvedPath = _candidates.last;
+      content = last.bean ?? "";
+      setState(() {});
+      return;
+    }
+    last?.message?.toast();
+    setState(() {
+      content = "";
+    });
   }
 
   @override

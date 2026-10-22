@@ -10,6 +10,7 @@ import 'package:qinglong_app/base/single_account_page.dart';
 import 'package:qinglong_app/base/sp_const.dart';
 import 'package:qinglong_app/base/ui/lazy_load_state.dart';
 import 'package:qinglong_app/base/ui/loading_widget.dart';
+import 'package:qinglong_app/base/ui/virtual_log_view.dart';
 import 'package:qinglong_app/utils/sp_utils.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -107,21 +108,9 @@ class _InTimeSubscribeLogPageState extends State<InTimeSubscribeLogPage> with La
                 ? const Center(
                     child: LoadingWidget(),
                   )
-                : CupertinoScrollbar(
-                    child: SingleChildScrollView(
-                      controller: controller,
-                      primary: true,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: ExtendedText(
-                        content!,
-                        selectionHeightStyle: BoxHeightStyle.max,
-                        selectionEnabled: true,
-                        selectionWidthStyle: BoxWidthStyle.max,
-                        style: const TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                : VirtualLogView(
+                    content: content!,
+                    controller: controller,
                   ),
           ),
         ),

@@ -9,6 +9,7 @@ import 'package:qinglong_app/base/ql_app_bar.dart';
 import 'package:qinglong_app/base/single_account_page.dart';
 import 'package:qinglong_app/base/ui/lazy_load_state.dart';
 import 'package:qinglong_app/base/ui/loading_widget.dart';
+import 'package:qinglong_app/base/ui/virtual_log_view.dart';
 import 'package:qinglong_app/utils/extension.dart';
 
 
@@ -42,18 +43,8 @@ class _TaskLogDetailPageState extends ConsumerState<TaskLogDetailPage>
       ),
       body: content == null
           ? const Center(child: LoadingWidget())
-          : Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 15,
-              ),
-              child: SelectableText(
-                (content == null || content!.isEmpty) ? "暂无数据" : content!,
-                selectionHeightStyle: BoxHeightStyle.max,
-                selectionWidthStyle: BoxWidthStyle.max,
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
+          : VirtualLogView(
+              content: (content == null || content!.isEmpty) ? "暂无数据" : content!,
             ),
     );
   }

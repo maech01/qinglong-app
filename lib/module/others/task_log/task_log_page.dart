@@ -81,6 +81,13 @@ class _TaskLogPageState extends ConsumerState<TaskLogPage> with LazyLoadState<Ta
 
   @override
   Widget build(BuildContext context) {
+    // Filter once per build instead of emitting a zero-size widget for every
+    // non-matching row inside itemBuilder (that kept the whole log tree in
+    // the scroll view even while searching).
+    final String query = searchText.text.trim();
+    final List<TaskLogBean> visible = query.isEmpty
+        ? list
+        : list.where((TaskLogBean e) => (e.name ?? "").contains(query)).toList();
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onPanDown: (_) {
@@ -118,11 +125,7 @@ class _TaskLogPageState extends ConsumerState<TaskLogPage> with LazyLoadState<Ta
                     if (index == 0) {
                       return searchCell(ref);
                     }
-                    TaskLogBean item = list[index - 1];
-
-                    if (searchText.text.isNotEmpty && !(item.name?.contains(searchText.text) ?? false)) {
-                      return const SizedBox.shrink();
-                    }
+                    TaskLogBean item = visible[index - 1];
 
                     if ((item.isDir ?? false)) {
                       return Slidable(
@@ -308,7 +311,7 @@ class _TaskLogPageState extends ConsumerState<TaskLogPage> with LazyLoadState<Ta
                       );
                     }
                   },
-                  itemCount: list.length + 1,
+                  itemCount: visible.length + 1,
                 ),
               ),
       ),

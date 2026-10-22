@@ -1,0 +1,72 @@
+name: Build APK
+
+# Builds the optimized client and uploads a signed release APK.
+# Push to main (or run manually) → download `qinglong-app-release` from the
+# run's Artifacts section.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The project targets Dart <3.0.0 and the pre-3.16 `apply from:
+      # flutter.gradle` build layout, so pin 3.7.x rather than "latest".
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.7.12
+          channel: stable
+          cache: true
+
+      # Gradle 6.7 (project wrapper) cannot run on JDK 17.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Show toolchain
+        run: |
+          flutter --version
+          java -version
+
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
+
+      - name: Create signing key
+        run: |
+          if [ ! -f android/app/qinglong.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore android/app/qinglong.keystore \
+              -alias jiangyuesong \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass jiangyuesong -keypass jiangyuesong \
+              -dname "CN=qinglong, OU=app, O=qinglong, L=cn, ST=cn, C=cn"
+          fi
+
+      - name: Install Android platform 33
+        run: |
+          SDKMANAGER="${ANDROID_SDK_ROOT:-$ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ -x "$SDKMANAGER" ]; then
+            "$SDKMANAGER" "platforms;android-33" "build-tools;33.0.1" || true
+          fi
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze (non-blocking)
+        run: flutter analyze || true
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: qinglong-app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

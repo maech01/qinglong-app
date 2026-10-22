@@ -10,6 +10,7 @@ import 'package:qinglong_app/base/ql_app_bar.dart';
 import 'package:qinglong_app/base/single_account_page.dart';
 import 'package:qinglong_app/base/ui/lazy_load_state.dart';
 import 'package:qinglong_app/base/ui/loading_widget.dart';
+import 'package:qinglong_app/base/ui/virtual_log_view.dart';
 import 'package:qinglong_app/utils/extension.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -112,21 +113,7 @@ class _InTimeHistoryLogPageState extends State<InTimeHistoryLogPage> with LazyLo
               ? const Center(
                   child: LoadingWidget(),
                 )
-              : CupertinoScrollbar(
-                  child: SingleChildScrollView(
-                    primary: true,
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: ExtendedText(
-                      content!,
-                      selectionHeightStyle: BoxHeightStyle.max,
-                      selectionEnabled: true,
-                      selectionWidthStyle: BoxWidthStyle.max,
-                      style: const TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
+              : VirtualLogView(content: content!),
         ),
       ),
     );

@@ -414,14 +414,19 @@ class Api {
   }
 
   Future<HttpResponse<String>> taskLogDetail(String name, String path) async {
+    final Url url = getIt<Url>(instanceName: index.toString());
+    final Http http = getIt<Http>(instanceName: index.toString());
     if (getIt<SystemBean>(instanceName: index.toString()).isUpperVersion2_13_0()) {
-      return await getIt<Http>(instanceName: index.toString()).get<String>(
-        getIt<Url>(instanceName: index.toString()).taskLogDetail + name + "?path=" + path,
-        null,
+      // Keep the filename as a path segment and send the directory as a real
+      // query parameter, so task names and log paths containing spaces or
+      // non-ASCII characters are encoded instead of pasted into the URL.
+      return await http.get<String>(
+        url.taskLogDetail + Uri.encodeComponent(name),
+        {"path": path},
       );
     } else {
-      return await getIt<Http>(instanceName: index.toString()).get<String>(
-        getIt<Url>(instanceName: index.toString()).taskLogDetail + path + "/" + name,
+      return await http.get<String>(
+        url.taskLogDetail + path + "/" + name,
         null,
       );
     }

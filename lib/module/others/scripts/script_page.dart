@@ -203,6 +203,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> with LazyLoadState<Scri
                       arguments: {
                         "title": selectedNode?.title,
                         "path": selectedNode?.parent,
+                        "paths": selectedNode?.pathCandidates,
                       },
                     ).then(
                       (value) {
@@ -240,7 +241,10 @@ class _ScriptPageState extends ConsumerState<ScriptPage> with LazyLoadState<Scri
       }
       list.clear();
       response.bean?.removeWhere((element) => element.title == "node_modules");
-      list.addAll(response.bean ?? []);
+      // Derive every node's directory from the tree instead of trusting the
+      // panel's `parent` field, so scripts nested arbitrarily deep resolve to
+      // the right request path.
+      list.addAll(ScriptData.normalizeTree(response.bean ?? []));
       _treeViewController = TreeViewController(children: list);
       setState(() {});
     } else {
