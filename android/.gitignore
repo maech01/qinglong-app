@@ -11,3 +11,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+# 例外：本项目用它保证各次构建签名一致，才能覆盖安装。
+# 口令本来就明文写在 app/build.gradle 里，密钥文件不额外泄露什么；
+# 真要收紧，把口令换成 GitHub Secret 并删掉这个例外。
+!app/qinglong.keystore
