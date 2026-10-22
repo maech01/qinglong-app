@@ -121,25 +121,20 @@ class _TaskDetailPageState extends ConsumerState<TaskDetailPage> with LazyLoadSt
                           ),
                           desc: widget.taskBean.command?.replaceAll("task ", "") ?? "-",
                           taped: () {
-                            if (widget.taskBean.command == null || widget.taskBean.command!.isEmpty) return;
-                            if (!(widget.taskBean.command?.startsWith("task ") ?? true)) return;
-
-                            String path = widget.taskBean.command?.replaceAll("task ", "").trim() ?? "";
-
-                            if (!path.contains("/")) {
-                              Navigator.of(context).pushNamed(Routes.routeScriptDetail, arguments: {
-                                "title": path.trim(),
-                                "path": "",
-                              });
-                            } else {
-                              List<String> paths = path.split("/");
-                              if (paths.length == 2) {
-                                Navigator.of(context).pushNamed(Routes.routeScriptDetail, arguments: {
-                                  "title": paths[1],
-                                  "path": paths[0],
-                                });
-                              }
-                            }
+                            // `task <脚本路径> [参数]`：只取第一个空白前的令牌，
+                            // 并且按最后一个 "/" 切分——旧代码只处理了恰好两段
+                            // （目录/文件），脚本位于两级以上目录时直接什么都不做。
+                            final String scriptPath = _scriptPath;
+                            if (scriptPath.isEmpty) return;
+                            final int slash = scriptPath.lastIndexOf("/");
+                            final String title = slash >= 0 ? scriptPath.substring(slash + 1) : scriptPath;
+                            final String dir = slash >= 0 ? scriptPath.substring(0, slash) : "";
+                            if (title.isEmpty) return;
+                            Navigator.of(context).pushNamed(Routes.routeScriptDetail, arguments: {
+                              "title": title,
+                              "path": dir,
+                              "paths": <String>[dir],
+                            });
                           },
                         ),
                       ),
@@ -194,11 +189,18 @@ class _TaskDetailPageState extends ConsumerState<TaskDetailPage> with LazyLoadSt
                             size: 16,
                             color: ref.watch(themeProvider).themeColor.descColor(),
                           ),
-                          desc: widget.taskBean.command?.replaceAll("task ", "").replaceAll("/", "_").split(".")[0] ?? "-",
+                          desc: _logDir.isNotEmpty
+                              ? _logDir
+                              : (widget.taskBean.command?.replaceAll("task ", "").replaceAll("/", "_").split(".")[0] ?? "-"),
                           taped: () {
+                            // 用面板返回的 log_path 取日志目录，而不是把命令里的
+                            // "/" 换成 "_" 猜——多级脚本的目录名带任务 ID
+                            // （如 idp-script_dxgy_1531），猜出来的名字匹配不到任何目录，
+                            // 页面就是一片空白。拿不到时宁可不带过滤条件。
+                            final String dir = _logDir;
                             Navigator.of(context).pushNamed(
                               Routes.routeTaskLog,
-                              arguments: {"search": widget.taskBean.command?.replaceAll("task ", "").replaceAll("/", "_").split(".")[0] ?? ""},
+                              arguments: dir.isEmpty ? null : {"search": dir},
                             );
                           },
                         ),
@@ -403,6 +405,27 @@ class _TaskDetailPageState extends ConsumerState<TaskDetailPage> with LazyLoadSt
         ],
       ),
     );
+  }
+
+  /// 命令里的脚本路径（相对脚本根目录）。`task <路径> [参数]`。
+  String get _scriptPath {
+    final String cmd = (widget.taskBean.command ?? "").trim();
+    if (!cmd.startsWith("task ")) return "";
+    final String rest = cmd.substring(5).trim();
+    if (rest.isEmpty) return "";
+    return rest.split(RegExp(r"\s+")).first;
+  }
+
+  /// 面板给这个任务用的日志目录名。
+  ///
+  /// `log_path` 形如 `<日志目录>/<时间戳>.log`，取第一段即可；
+  /// 服务端的目录命名规则（脚本父目录 + 文件名 + 任务 ID）不是能从命令
+  /// 里稳定重建出来的，尤其脚本位于多级目录时。
+  String get _logDir {
+    final String lp = (widget.taskBean.logPath ?? "").trim();
+    if (lp.isEmpty) return "";
+    final int i = lp.indexOf("/");
+    return i > 0 ? lp.substring(0, i) : "";
   }
 
   void showLog() {

@@ -177,6 +177,8 @@ class _TaskLogPageState extends ConsumerState<TaskLogPage> with LazyLoadState<Ta
                           ],
                         ),
                         child: ExpansionTile(
+                          // 带搜索词进来时直接展开，用户不用再点一次
+                          initiallyExpanded: query.isNotEmpty,
                           title: Text(
                             item.name ?? "",
                             style: TextStyle(
