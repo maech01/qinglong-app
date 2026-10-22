@@ -38,10 +38,16 @@ jobs:
           flutter --version
           java -version
 
+      # runner 镜像里的 cmdline-tools 是 JDK 17 编译的，用 setup-java 设的 11 跑不动
+      # sdkmanager，所以这两步单独借 JDK 17。
       - name: 接受 Android 许可
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         run: yes | flutter doctor --android-licenses || true
 
       - name: 安装所需 Android 平台与 build-tools
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
         run: |
           SDK="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           SM="$SDK/cmdline-tools/latest/bin/sdkmanager"

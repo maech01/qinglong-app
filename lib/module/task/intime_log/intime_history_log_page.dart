@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:extended_text/extended_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
