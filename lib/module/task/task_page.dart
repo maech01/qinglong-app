@@ -46,6 +46,7 @@ class TaskPageState extends ConsumerState<TaskPage>
   TextEditingController searchText = TextEditingController();
 
   Timer? _searchDebounceTimer;
+  String _previousSearchText = '';
 
   TabController? _tabController;
   final ScrollController _scrollController = ScrollController();
@@ -99,10 +100,15 @@ class TaskPageState extends ConsumerState<TaskPage>
       if (searchText.value.composing.isValid) {
         return;
       }
+      // 文本未变化时跳过
+      if (searchText.text == _previousSearchText) {
+        return;
+      }
       // 只在文本实际变化时才 setState
       _searchDebounceTimer?.cancel();
-      _searchDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+      _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
         if (mounted) {
+          _previousSearchText = searchText.text;
           setState(() {});
         }
       });
