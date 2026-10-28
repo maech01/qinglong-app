@@ -418,17 +418,28 @@ class Api {
   Future<HttpResponse<String>> taskLogDetail(String name, String path) async {
     final Url url = getIt<Url>(instanceName: index.toString());
     final Http http = getIt<Http>(instanceName: index.toString());
+    final String cleanPath = (path ?? "").trim();
+    final String cleanName = (name ?? "").trim();
     if (getIt<SystemBean>(instanceName: index.toString()).isUpperVersion2_13_0()) {
       // Keep the filename as a path segment and send the directory as a real
       // query parameter, so task names and log paths containing spaces or
       // non-ASCII characters are encoded instead of pasted into the URL.
+      // 对于 sh 脚本等直接落在日志根目录的文件，path 为空时不要传
+      // 空字符串 / 斜杠，避免服务端拼出非法路径。
+      final Map<String, dynamic> params = <String, dynamic>{};
+      if (cleanPath.isNotEmpty) {
+        params["path"] = cleanPath;
+      }
       return await http.get<String>(
-        url.taskLogDetail + Uri.encodeComponent(name),
-        {"path": path},
+        url.taskLogDetail + Uri.encodeComponent(cleanName),
+        params.isEmpty ? null : params,
       );
     } else {
+      final String full = cleanPath.isEmpty
+          ? url.taskLogDetail + cleanName
+          : url.taskLogDetail + cleanPath + "/" + cleanName;
       return await http.get<String>(
-        url.taskLogDetail + path + "/" + name,
+        full,
         null,
       );
     }
