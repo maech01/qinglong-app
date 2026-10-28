@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -36,6 +37,8 @@ class _ScriptPageState extends ConsumerState<ScriptPage> with LazyLoadState<Scri
   ScrollController controller = ScrollController();
   TextEditingController searchText = TextEditingController();
 
+  Timer? _searchDebounceTimer;
+
   bool buttonshow = false;
 
   void scrollToTop() {
@@ -47,7 +50,17 @@ class _ScriptPageState extends ConsumerState<ScriptPage> with LazyLoadState<Scri
     super.initState();
     controller.addListener(floatingButtonVisibility);
     searchText.addListener(() {
-      setState(() {});
+      // 检测中文输入法组字状态，组字时不触发 setState
+      if (searchText.value.composing.isValid) {
+        return;
+      }
+      // 防抖处理，避免频繁重建 UI
+      _searchDebounceTimer?.cancel();
+      _searchDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+        if (mounted) {
+          setState(() {});
+        }
+      });
     });
   }
 
