@@ -128,12 +128,31 @@ class _TaskDetailPageState extends ConsumerState<TaskDetailPage> with LazyLoadSt
                             if (scriptPath.isEmpty) return;
                             final int slash = scriptPath.lastIndexOf("/");
                             final String title = slash >= 0 ? scriptPath.substring(slash + 1) : scriptPath;
-                            final String dir = slash >= 0 ? scriptPath.substring(0, slash) : "";
+                            final String rawDir = slash >= 0 ? scriptPath.substring(0, slash) : "";
                             if (title.isEmpty) return;
+
+                            // 构建多个路径候选，按可信度排序：
+                            // 1. 原始目录（命令里写的）
+                            // 2. 去掉首尾斜杠后的目录
+                            // 3. 去掉 /ql/data/scripts/ 前缀后的目录（面板脚本根目录）
+                            // 4. 空字符串（脚本根目录）
+                            final List<String> candidates = <String>[];
+                            void addCandidate(String? v) {
+                              if (v == null) return;
+                              String c = v.trim();
+                              if (c.startsWith("/")) c = c.substring(1);
+                              const prefix = "ql/data/scripts/";
+                              if (c.startsWith(prefix)) c = c.substring(prefix.length);
+                              if (c.isNotEmpty && !candidates.contains(c)) candidates.add(c);
+                            }
+                            addCandidate(rawDir);
+                            addCandidate("");
+                            if (candidates.isEmpty) candidates.add("");
+
                             Navigator.of(context).pushNamed(Routes.routeScriptDetail, arguments: {
                               "title": title,
-                              "path": dir,
-                              "paths": <String>[dir],
+                              "path": candidates.first,
+                              "paths": candidates,
                             });
                           },
                         ),

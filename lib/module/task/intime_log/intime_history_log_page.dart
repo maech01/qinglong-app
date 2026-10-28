@@ -19,12 +19,18 @@ import '../../home/system_bean.dart';
 
 class InTimeHistoryLogPage extends StatefulWidget {
   final String title;
+
+  /// 主路径（向后兼容）。优先使用 [paths] 中的候选。
   final String path;
+
+  /// 多个目录候选，按可信度排序。尝试直到某个返回非空内容为止。
+  final List<String>? paths;
 
   const InTimeHistoryLogPage({
     Key? key,
     required this.title,
-    required this.path,
+    this.path = "",
+    this.paths,
   }) : super(key: key);
 
   @override
@@ -34,21 +40,52 @@ class InTimeHistoryLogPage extends StatefulWidget {
 class _InTimeHistoryLogPageState extends State<InTimeHistoryLogPage> with LazyLoadState<InTimeHistoryLogPage> {
   String? content;
 
+  /// 实际返回内容的目录，用于后续删除等操作。
+  String? _resolvedPath;
+
   bool isRequest = false;
   bool canRequest = true;
 
-  getLogData() async {
-    HttpResponse<String> response = await SingleAccountPageState.ofApi(context).taskLogDetail(
-      widget.title,
-      widget.path,
-    );
-
-    if (response.success) {
-      content = response.bean;
-      setState(() {});
-    } else {
-      (response.message ?? "").toast();
+  /// 所有要尝试的目录候选，去重后按优先级排序。
+  List<String> get _candidates {
+    final List<String> out = <String>[];
+    void add(String? value) {
+      if (value == null) return;
+      final String v = value.trim();
+      if (out.contains(v)) return;
+      out.add(v);
     }
+
+    for (final String p in widget.paths ?? const <String>[]) {
+      add(p);
+    }
+    add(widget.path);
+    if (out.isEmpty) out.add("");
+    return out;
+  }
+
+  getLogData() async {
+    HttpResponse<String>? last;
+    for (final String candidate in _candidates) {
+      final HttpResponse<String> response =
+          await SingleAccountPageState.ofApi(context).taskLogDetail(widget.title, candidate);
+      last = response;
+      // 服务端对不存在的路径可能返回 200 但空 body，把空内容当作“继续找下一个候选”。
+      if (response.success && (response.bean?.isNotEmpty ?? false)) {
+        _resolvedPath = candidate;
+        content = response.bean;
+        if (mounted) setState(() {});
+        return;
+      }
+    }
+
+    if (last != null && last.success) {
+      _resolvedPath = _candidates.last;
+      content = last.bean ?? "";
+      if (mounted) setState(() {});
+      return;
+    }
+    if (mounted) last?.message?.toast();
   }
 
   @override
@@ -80,7 +117,7 @@ class _InTimeHistoryLogPageState extends State<InTimeHistoryLogPage> with LazyLo
                     title: "删除",
                     onTap: () {
                       HapticFeedback.mediumImpact();
-                      deleteFold(widget.title, widget.path);
+                      deleteFold(widget.title, _resolvedPath ?? widget.path);
                     },
                   ),
                 ],
@@ -97,7 +134,7 @@ class _InTimeHistoryLogPageState extends State<InTimeHistoryLogPage> with LazyLo
                   color: Theme.of(context).appBarTheme.iconTheme?.color,
                 ),
               ),
-            ),
+            )
           )
         ],
         title: widget.title,

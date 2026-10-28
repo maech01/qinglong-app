@@ -119,16 +119,22 @@ class Api {
   }
 
   Future<HttpResponse<NullResponse>> deleteLogFold(String fileName, String path) async {
+    final Map<String, dynamic> body = <String, dynamic>{"filename": fileName, "type": "directory"};
+    final String cleanPath = (path ?? "").trim();
+    if (cleanPath.isNotEmpty) body["path"] = cleanPath;
     return await getIt<Http>(instanceName: index.toString()).delete<NullResponse>(
       getIt<Url>(instanceName: index.toString()).logFoldDelete,
-      {"filename": fileName, "path": path, "type": "directory"},
+      body,
     );
   }
 
   Future<HttpResponse<NullResponse>> deleteLog(String fileName, String path) async {
+    final Map<String, dynamic> body = <String, dynamic>{"filename": fileName, "type": "file"};
+    final String cleanPath = (path ?? "").trim();
+    if (cleanPath.isNotEmpty) body["path"] = cleanPath;
     return await getIt<Http>(instanceName: index.toString()).delete<NullResponse>(
       getIt<Url>(instanceName: index.toString()).logFoldDelete,
-      {"filename": fileName, "path": path, "type": "file"},
+      body,
     );
   }
 
