@@ -38,6 +38,7 @@ class _ScriptPageState extends ConsumerState<ScriptPage> with LazyLoadState<Scri
   TextEditingController searchText = TextEditingController();
 
   Timer? _searchDebounceTimer;
+  String _previousSearchText = '';
 
   bool buttonshow = false;
 
@@ -54,10 +55,15 @@ class _ScriptPageState extends ConsumerState<ScriptPage> with LazyLoadState<Scri
       if (searchText.value.composing.isValid) {
         return;
       }
+      // 文本未变化时跳过
+      if (searchText.text == _previousSearchText) {
+        return;
+      }
       // 防抖处理，避免频繁重建 UI
       _searchDebounceTimer?.cancel();
-      _searchDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+      _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
         if (mounted) {
+          _previousSearchText = searchText.text;
           setState(() {});
         }
       });
