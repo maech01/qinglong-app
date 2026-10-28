@@ -527,6 +527,7 @@ class TaskPageState extends ConsumerState<TaskPage>
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     removeOverlay();
     super.dispose();
