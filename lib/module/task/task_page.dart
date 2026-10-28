@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:custom_sliding_segmented_control/custom_sliding_segmented_control.dart';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +13,7 @@ import 'package:qinglong_app/base/single_account_page.dart';
 import 'package:qinglong_app/base/sp_const.dart';
 import 'package:qinglong_app/base/theme.dart';
 import 'package:qinglong_app/base/ui/loading_widget.dart';
-import 'package:qinglong_app/base/ui/search_cell_optimized.dart';
+import 'package:qinglong_app/base/ui/search_cell.dart';
 import 'package:qinglong_app/module/task/add_task_page.dart';
 import 'package:qinglong_app/module/task/intime_log/intime_log_page.dart';
 import 'package:qinglong_app/module/task/task_bean.dart';
@@ -43,6 +44,8 @@ class TaskPage extends ConsumerStatefulWidget {
 class TaskPageState extends ConsumerState<TaskPage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   TextEditingController searchText = TextEditingController();
+
+  Timer? _searchDebounceTimer;
 
   TabController? _tabController;
   final ScrollController _scrollController = ScrollController();
@@ -90,108 +93,23 @@ class TaskPageState extends ConsumerState<TaskPage>
     _tabController = TabController(length: 4, vsync: this);
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // 移除直接的 addListener setState，改为在 onSearchChanged 中使用防抖，
-    // 避免中文输入法组字时频繁触发 setState 导致卡顿
-  }
-
-  @override
-  void dispose() {
-    _searchDebounceTimer?.cancel();
-    super.dispose();
+    // 防抖搜索：避免中文输入法组字时频繁 setState 导致卡顿
+    searchText.addListener(() {
+      // 检测中文输入法组字状态，组字时不触发 setState
+      if (searchText.value.composing.isValid) {
+        return;
+      }
+      // 只在文本实际变化时才 setState
+      _searchDebounceTimer?.cancel();
+      _searchDebounceTimer = Timer(const Duration(milliseconds: 150), () {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    });
   }
 
   double searchCellHeight = 55;
-  
-  // 防抖搜索定时器
-  Timer? _searchDebounceTimer;
-  
-  // 搜索相关的列表
-  List<TaskBean> _filteredList = [];
-  
-  // 原始列表缓存
-  List<TaskBean> _originalList = [];
-  
-  // 智能搜索方法
-  bool _isItemMatchSearch(TaskBean item, String query) {
-    if (query.isEmpty) return true;
-    
-    final lowerQuery = query.toLowerCase();
-    final chineseAndEnglish = _splitChineseAndEnglish(query);
-    
-    // 精确匹配检查
-    if (item.name?.toLowerCase() == lowerQuery || 
-        item.command?.toLowerCase() == lowerQuery ||
-        item.schedule == query) {
-      return true;
-    }
-    
-    // 快速检查 - 只要有一个关键词匹配即可
-    for (final word in chineseAndEnglish) {
-      final lowerWord = word.toLowerCase();
-      
-      if (item.name?.toLowerCase().contains(lowerWord) ?? false) {
-        return true;
-      }
-      
-      if (item.command?.toLowerCase().contains(lowerWord) ?? false) {
-        return true;
-      }
-      
-      if (item.schedule?.toLowerCase().contains(lowerWord) ?? false) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
-  
-  // 中英文混合分割
-  List<String> _splitChineseAndEnglish(String text) {
-    if (text.isEmpty) return [];
-    
-    final RegExp chinesePattern = RegExp(r'[\u4e00-\u9fff]+');
-    final RegExp englishPattern = RegExp(r'[a-zA-Z0-9]+');
-    
-    final List<String> keywords = [];
-    
-    // 提取中文
-    final chineseMatches = chinesePattern.allMatches(text);
-    for (final match in chineseMatches) {
-      keywords.add(match.group(0)!);
-    }
-    
-    // 提取英文/数字
-    final englishMatches = englishPattern.allMatches(text);
-    for (final match in englishMatches) {
-      keywords.add(match.group(0)!);
-    }
-    
-    return keywords;
-  }
-  
-  // 触发搜索逻辑
-  void _triggerSearch(String query) {
-    if (query.isEmpty) {
-      // 空查询直接恢复原始列表，避免不必要的过滤
-      if (_filteredList.length != _originalList.length) {
-        setState(() {
-          _filteredList = List.from(_originalList);
-          _updateTabData();
-        });
-      }
-      return;
-    }
-    
-    // 防抖：避免中文输入法组字时的重复搜索
-    final List<TaskBean> result = _originalList.where((item) =>
-        _isItemMatchSearch(item, query)
-    ).toList();
-    
-    setState(() {
-      _filteredList = result;
-      _updateTabData();
-    });
-  }
 
   SliverAppBar _buildAppBar(WidgetRef ref, TaskViewModel model) {
     return SliverAppBar(
@@ -270,7 +188,16 @@ class TaskPageState extends ConsumerState<TaskPage>
                       checkedIds.length ==
                           getListByType(_tabController?.index ?? 0).where((item) {
                             if (searchText.text.isEmpty ||
-                                _isItemMatchSearch(item, searchText.text)) {
+                                (item.name
+                                    ?.toLowerCase()
+                                    .contains(searchText.text.toLowerCase()) ??
+                                    false) ||
+                                (item.command
+                                    ?.toLowerCase()
+                                    .contains(searchText.text.toLowerCase()) ??
+                                    false) ||
+                                (item.schedule?.contains(searchText.text.toLowerCase()) ??
+                                    false)) {
                               return true;
                             }
                             return false;
@@ -382,7 +309,15 @@ class TaskPageState extends ConsumerState<TaskPage>
                 if (editMode) {
                   if (checkedIds.length ==
                       getListByType(_tabController?.index ?? 0).where((item) {
-                        return searchText.text.isEmpty || _isItemMatchSearch(item, searchText.text);
+                        if (searchText.text.isEmpty ||
+                            (item.name?.toLowerCase().contains(searchText.text.toLowerCase()) ??
+                                false) ||
+                            (item.command?.toLowerCase().contains(searchText.text.toLowerCase()) ??
+                                false) ||
+                            (item.schedule?.contains(searchText.text.toLowerCase()) ?? false)) {
+                          return true;
+                        }
+                        return false;
                       }).length) {
                     //全不选
                     checkedIds.clear();
@@ -392,7 +327,17 @@ class TaskPageState extends ConsumerState<TaskPage>
                     checkedIds.clear();
                     checkedIds.addAll(getListByType(_tabController?.index ?? 0)
                         .where((item) {
-                          return searchText.text.isEmpty || _isItemMatchSearch(item, searchText.text);
+                          if (searchText.text.isEmpty ||
+                              (item.name?.toLowerCase().contains(searchText.text.toLowerCase()) ??
+                                  false) ||
+                              (item.command
+                                      ?.toLowerCase()
+                                      .contains(searchText.text.toLowerCase()) ??
+                                  false) ||
+                              (item.schedule?.contains(searchText.text.toLowerCase()) ?? false)) {
+                            return true;
+                          }
+                          return false;
                         })
                         .map((e) => e.sId ?? "")
                         .toList());
@@ -574,39 +519,14 @@ class TaskPageState extends ConsumerState<TaskPage>
         bottom: 10,
       ),
       height: searchCellHeight.toDouble(),
-      child: OptimizedSearchCell(
+      child: SearchCell(
         controller: searchText,
-        onSearchChanged: (query) {
-          // 防抖搜索处理
-          if (_searchDebounceTimer?.isActive ?? false) {
-            _searchDebounceTimer?.cancel();
-          }
-          _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-            if (mounted) {
-              // 触发搜索逻辑
-              _triggerSearch(query);
-            }
-          });
-        },
-        onSubmitted: (query) {
-          _triggerSearch(query);
-        },
-        onClear: () {
-          // 清除搜索结果
-          setState(() {
-            searchText.clear();
-            _filteredList = List.from(_originalList);
-          });
-        },
-        autoFocus: false,
       ),
     );
   }
 
   @override
   void dispose() {
-    _searchDebounceTimer?.cancel();
-    searchText.dispose();
     WidgetsBinding.instance.removeObserver(this);
     removeOverlay();
     super.dispose();
@@ -974,7 +894,9 @@ class _ListBodyState extends ConsumerState<ListBodyWidget> with AutomaticKeepAli
       itemBuilder: (context, index) {
         TaskBean item = widget.list[index];
         if (widget.searchText.isEmpty ||
-            _isItemMatchSearch(item, widget.searchText)) {
+            (item.name?.toLowerCase().contains(widget.searchText.toLowerCase()) ?? false) ||
+            (item.command?.toLowerCase().contains(widget.searchText.toLowerCase()) ?? false) ||
+            (item.schedule?.contains(widget.searchText.toLowerCase()) ?? false)) {
           return TaskItemCell(
             item,
             ref,
