@@ -49,8 +49,7 @@ class _SearchCellState extends ConsumerState<SearchCell> {
       suffixMode: OverlayVisibilityMode.editing,
       suffix: GestureDetector(
         onTap: () {
-          widget.controller.text = "";
-          setState(() {});
+          widget.controller.clear();
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(
