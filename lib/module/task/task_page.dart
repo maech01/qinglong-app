@@ -90,9 +90,14 @@ class TaskPageState extends ConsumerState<TaskPage>
     _tabController = TabController(length: 4, vsync: this);
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    searchText.addListener(() {
-      setState(() {});
-    });
+    // 移除直接的 addListener setState，改为在 onSearchChanged 中使用防抖，
+    // 避免中文输入法组字时频繁触发 setState 导致卡顿
+  }
+
+  @override
+  void dispose() {
+    _searchDebounceTimer?.cancel();
+    super.dispose();
   }
 
   double searchCellHeight = 55;
@@ -166,14 +171,24 @@ class TaskPageState extends ConsumerState<TaskPage>
   
   // 触发搜索逻辑
   void _triggerSearch(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredList = List.from(_originalList);
-      } else {
-        _filteredList = _originalList.where((item) => 
-            _isItemMatchSearch(item, query)
-        ).toList();
+    if (query.isEmpty) {
+      // 空查询直接恢复原始列表，避免不必要的过滤
+      if (_filteredList.length != _originalList.length) {
+        setState(() {
+          _filteredList = List.from(_originalList);
+          _updateTabData();
+        });
       }
+      return;
+    }
+    
+    // 防抖：避免中文输入法组字时的重复搜索
+    final List<TaskBean> result = _originalList.where((item) =>
+        _isItemMatchSearch(item, query)
+    ).toList();
+    
+    setState(() {
+      _filteredList = result;
       _updateTabData();
     });
   }
