@@ -1,0 +1,84 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17 for SDK tools
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Accept Android licenses and install SDK packages
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.1"
+
+      - name: Setup Java 11 for build
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.7.12'
+          channel: 'stable'
+
+      - name: Print toolchain versions
+        run: |
+          echo "=== Flutter ==="
+          flutter --version
+          echo "=== Java ==="
+          java -version
+          echo "=== ANDROID_HOME ==="
+          echo "$ANDROID_HOME"
+
+      - name: Generate keystore
+        run: |
+          if [ ! -f android/app/qinglong.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore android/app/qinglong.keystore \
+              -alias jiangyuesong \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass jiangyuesong -keypass jiangyuesong \
+              -dname "CN=qinglong,OU=app,O=qinglong,L=cn,ST=cn,C=cn"
+          fi
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Flutter analyze
+        run: flutter analyze || true
+
+      - name: Build APK
+        run: |
+          echo "Starting Flutter APK build..."
+          flutter build apk --release
+          echo "Build exit code: $?"
+
+      - name: Check APK exists
+        run: |
+          ls -la build/app/outputs/flutter-apk/ 2>&1 || echo "APK directory not found"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qinglong-app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
