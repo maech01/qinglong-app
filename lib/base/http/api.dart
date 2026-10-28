@@ -426,7 +426,7 @@ class Api {
       // non-ASCII characters are encoded instead of pasted into the URL.
       // 对于 sh 脚本等直接落在日志根目录的文件，path 为空时不要传
       // 空字符串 / 斜杠，避免服务端拼出非法路径。
-      final Map<String, dynamic> params = <String, dynamic>{};
+      final Map<String, String?> params = <String, String?>{};
       if (cleanPath.isNotEmpty) {
         params["path"] = cleanPath;
       }
