@@ -18,15 +18,12 @@ class SearchCell extends ConsumerStatefulWidget {
 
 class _SearchCellState extends ConsumerState<SearchCell> {
   int searchTextWidth = 0;
+  late TextPainter _textPainter;
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    TextPainter textPainter = TextPainter(
+    _textPainter = TextPainter(
       text: const TextSpan(
         text: "搜索",
         style: TextStyle(
@@ -36,7 +33,17 @@ class _SearchCellState extends ConsumerState<SearchCell> {
       textDirection: TextDirection.ltr,
       textScaleFactor: MediaQuery.of(context).textScaleFactor,
     );
-    textPainter.layout();
+    _textPainter.layout();
+  }
+
+  @override
+  void dispose() {
+    _textPainter.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return CupertinoTextField.borderless(
       maxLines: 1,
       textAlign: widget.controller.text.isNotEmpty ? TextAlign.center : TextAlign.start,
@@ -73,7 +80,7 @@ class _SearchCellState extends ConsumerState<SearchCell> {
       },
       prefix: Padding(
         padding: EdgeInsets.only(
-          left: MediaQuery.of(context).size.width / 2 - textPainter.width - 15 - 5,
+          left: MediaQuery.of(context).size.width / 2 - _textPainter.width - 15 - 5,
         ),
         child: Image.asset(
           "assets/images/icon_search.png",
