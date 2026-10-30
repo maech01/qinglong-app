@@ -559,42 +559,52 @@ class HomePageState extends ConsumerState<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              dismissMask();
-                              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                context
-                                    .findAncestorStateOfType<MultiAccountPageState>()
-                                    ?.updateIndex(index);
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 12,
-                              ),
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                userInfo.host
-                                        ?.replaceAll("http://", "")
-                                        .replaceAll("https://", "") ??
-                                    "",
-                                maxLines: 1,
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: ref.watch(themeProvider).themeColor.titleColor(),
-                                  fontSize: 14,
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: ref.watch(themeProvider).themeMode == modeDark
+                                ? const Color(0xFF2A2A2A)
+                                : const Color(0xFFF7F7F7),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF000000),
+                              width: 1,
+                            ),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () {
+                                dismissMask();
+                                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                                  context
+                                      .findAncestorStateOfType<MultiAccountPageState>()
+                                      ?.updateIndex(index);
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  userInfo.host
+                                          ?.replaceAll("http://", "")
+                                          .replaceAll("https://", "") ??
+                                      "",
+                                  maxLines: 1,
+                                  softWrap: true,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: ref.watch(themeProvider).themeColor.titleColor(),
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const Divider(
-                          indent: 15,
-                          height: 1,
                         ),
                       ],
                     );
