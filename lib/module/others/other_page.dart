@@ -789,6 +789,34 @@ class OtherPageState extends ConsumerState<OtherPage>
                           ),
                         ],
                       ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: buildOtherFun2(
+                              "YYB-Go",
+                              CupertinoIcons.globe,
+                              () {
+                                Navigator.of(context).pushNamed(
+                                  Routes.routeYybGo,
+                                  arguments: const {"url": "http://127.0.0.1:8000"},
+                                );
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(),
+                          ),
+                          Expanded(
+                            child: Container(),
+                          ),
+                          Expanded(
+                            child: Container(),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

@@ -20,6 +20,7 @@ import 'package:qinglong_app/module/others/scripts/script_edit_page.dart';
 import 'package:qinglong_app/module/others/scripts/script_page.dart';
 import 'package:qinglong_app/module/others/task_log/task_log_page.dart';
 import 'package:qinglong_app/module/others/update_password_page.dart';
+import 'package:qinglong_app/module/others/yyb_go_page.dart';
 import 'package:qinglong_app/module/setting_page.dart';
 import 'package:qinglong_app/module/subscribe/subscribe_detail_page.dart';
 import 'package:qinglong_app/module/subscribe/subscribe_page.dart';
@@ -53,6 +54,8 @@ class Routes {
 
   static const String routeIcloudFile = "/icloudfile";
 
+  static const String routeYybGo = "/yybgo";
+
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case routeHomePage:
@@ -64,6 +67,8 @@ class Routes {
                 ));
       case routeICloud:
         return CupertinoPageRoute(builder: (context) => const IcloudPage());
+      case routeYybGo:
+        return CupertinoPageRoute(builder: (context) => YybGoPage(url: (settings.arguments as Map?)?['url']));
       case routeSubscribeList:
         return CupertinoPageRoute(builder: (context) => const SubscribePage());
       case routeSetting:
