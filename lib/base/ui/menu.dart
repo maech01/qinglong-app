@@ -51,15 +51,15 @@ class QLCupertinoContextMenuAction extends StatefulWidget {
 
 class _QLCupertinoContextMenuActionState
     extends State<QLCupertinoContextMenuAction> {
-  static const Color _kBackgroundColor = Color(0xFFEEEEEE);
-  static const Color _kBackgroundColorPressed = Color(0xFFDDDDDD);
+  static const Color _kBackgroundColor = Color(0xFF1F1F1F);
+  static const Color _kBackgroundColorPressed = Color(0xFF2A2A2A);
   static const double _kButtonHeight = 30.0;
   static const TextStyle _kActionSheetActionStyle = TextStyle(
     fontFamily: '.SF UI Text',
     inherit: false,
     fontSize: 14.0,
     fontWeight: FontWeight.w400,
-    color: CupertinoColors.black,
+    color: CupertinoColors.white,
     textBaseline: TextBaseline.alphabetic,
   );
 
@@ -117,7 +117,7 @@ class _QLCupertinoContextMenuActionState
             decoration: BoxDecoration(
               color: _isPressed ? _kBackgroundColorPressed : _kBackgroundColor,
               border: const Border(
-                bottom: BorderSide(color: _kBackgroundColorPressed),
+                bottom: BorderSide(color: Color(0xFF3A3A3A)),
               ),
             ),
             padding: const EdgeInsets.symmetric(
