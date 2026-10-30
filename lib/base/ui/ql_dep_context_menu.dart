@@ -538,7 +538,7 @@ class _ContextMenuRoute<T> extends PopupRoute<T> {
         );
 
   // Barrier color for a Cupertino modal barrier.
-  static const Color _kModalBarrierColor = Color(0xBF000000);
+  static const Color _kModalBarrierColor = Color(0xCC000000);
 
   // The duration of the transition used when a modal popup is shown. Eyeballed
   // from a physical device running iOS 13.1.2.
@@ -1187,9 +1187,9 @@ class _ContextMenuSheet extends StatelessWidget {
       child: IntrinsicHeight(
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: const Color(0xFF1F1F1F),
             borderRadius: const BorderRadius.all(Radius.circular(13.0)),
-            border: Border.all(color: const Color(0xFF333333), width: 1),
+            border: Border.all(color: const Color(0xFF444444), width: 1),
           ),
           child: ClipRRect(
             borderRadius: const BorderRadius.all(Radius.circular(13.0)),
