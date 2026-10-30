@@ -51,8 +51,8 @@ class QLCupertinoContextMenuAction extends StatefulWidget {
 
 class _QLCupertinoContextMenuActionState
     extends State<QLCupertinoContextMenuAction> {
-  static const Color _kBackgroundColor = Color(0xFF1F1F1F);
-  static const Color _kBackgroundColorPressed = Color(0xFF2A2A2A);
+  static const Color _kBackgroundColor = Color(0xFF000000);
+  static const Color _kBackgroundColorPressed = Color(0xFF1A1A1A);
   static const double _kButtonHeight = 30.0;
   static const TextStyle _kActionSheetActionStyle = TextStyle(
     fontFamily: '.SF UI Text',

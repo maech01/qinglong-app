@@ -1185,11 +1185,18 @@ class _ContextMenuSheet extends StatelessWidget {
       fit: FlexFit.tight,
       flex: 2,
       child: IntrinsicHeight(
-        child: ClipRRect(
-          borderRadius: const BorderRadius.all(Radius.circular(13.0)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: actions,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: const BorderRadius.all(Radius.circular(13.0)),
+            border: Border.all(color: const Color(0xFF333333), width: 1),
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.all(Radius.circular(13.0)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: actions,
+            ),
           ),
         ),
       ),
