@@ -59,6 +59,8 @@ class DropDownState {
   void showModal(context) {
     showModalBottomSheet(
       isScrollControlled: true,
+      barrierColor: Colors.black.withOpacity(0.75),
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(15.0)),
       ),
@@ -113,7 +115,14 @@ class _MainBodyState extends ConsumerState<MainBody> {
       maxChildSize: 0.9,
       expand: false,
       builder: (BuildContext context, ScrollController scrollController) {
-        return Column(
+        return Container(
+          decoration: BoxDecoration(
+            color: ref.watch(themeProvider).themeMode == modeDark
+                ? const Color(0xFF1F1F1F)
+                : const Color(0xFFFFFFFF),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
+          ),
+          child: Column(
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 10.0),
@@ -208,7 +217,8 @@ class _MainBodyState extends ConsumerState<MainBody> {
               ),
             ),
           ],
-        );
+        ),
+      );
       },
     );
   }
