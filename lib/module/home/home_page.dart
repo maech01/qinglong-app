@@ -16,6 +16,7 @@ import 'package:qinglong_app/module/config/config_page.dart';
 import 'package:qinglong_app/module/env/env_page.dart';
 import 'package:qinglong_app/module/home/version_history_bean.dart';
 import 'package:qinglong_app/module/others/other_page.dart';
+import 'package:qinglong_app/module/others/yyb_go_page.dart';
 import 'package:qinglong_app/module/task/task_page.dart';
 import 'package:move_to_background/move_to_background.dart';
 import 'package:qinglong_app/utils/extension.dart';
@@ -240,6 +241,11 @@ class HomePageState extends ConsumerState<HomePage> {
                     const Positioned.fill(
                       child: ConfigPage(),
                     ),
+                    const Positioned.fill(
+                      child: YybGoPage(
+                        url: "http://127.0.0.1:8000",
+                      ),
+                    ),
                     Positioned.fill(
                       child: OtherPage(
                         key: meKey,
@@ -295,7 +301,7 @@ class HomePageState extends ConsumerState<HomePage> {
                               await envKey.currentState?.move2Top();
                             } else if (ref.read<int>((SingleAccountPageState.ofHomeIndexProvider(
                                     context)(getProviderName(context)))) ==
-                                3) {
+                                4) {
                               await meKey.currentState?.move2Top();
                             }
                             return;
@@ -314,7 +320,7 @@ class HomePageState extends ConsumerState<HomePage> {
                         showSelectedLabels: true,
                         showUnselectedLabels: true,
                         onLongTap: (index) async {
-                          if (index == 3) {
+                          if (index == 4) {
                             HapticFeedback.mediumImpact();
                             setState(() {
                               showMask = true;
@@ -400,6 +406,13 @@ class HomePageState extends ConsumerState<HomePage> {
     );
     titles.add(
       IndexBean(
+        "assets/images/icon_icloud.png",
+        "assets/images/icon_icloud_checked.png",
+        "YYB-Go",
+      ),
+    );
+    titles.add(
+      IndexBean(
         "assets/images/icon_other.png",
         "assets/images/icon_other_checked.png",
         "我的",
@@ -417,6 +430,29 @@ class HomePageState extends ConsumerState<HomePage> {
           const Spacer(),
           const Spacer(),
           const Spacer(),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ColorFiltered(
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                  child: Image.asset(
+                    "assets/images/icon_other.png",
+                    fit: BoxFit.cover,
+                    width: 20,
+                    height: 20,
+                  ),
+                ),
+                const Text(
+                  "我的",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
