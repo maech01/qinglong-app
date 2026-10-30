@@ -14,7 +14,8 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="青龙客户端">
+        android:label="青龙客户端"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
