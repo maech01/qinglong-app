@@ -54,6 +54,7 @@ void showMoreOperate(BuildContext context, List<Widget> list) {
   showCupertinoModalPopup(
     useRootNavigator: false,
     context: context,
+    barrierColor: Colors.black.withOpacity(0.75),
     builder: (context1) {
       return ClipRRect(
         borderRadius: const BorderRadius.only(
@@ -62,7 +63,9 @@ void showMoreOperate(BuildContext context, List<Widget> list) {
         ),
         child: Consumer(builder: (context, ref, c) {
           return ColoredBox(
-            color: ref.watch(themeProvider).themeColor.settingBordorColor(),
+            color: ref.watch(themeProvider).themeMode == modeDark
+                ? const Color(0xFF1F1F1F)
+                : const Color(0xFFFFFFFF),
             child: SafeArea(
               top: false,
               child: Column(
@@ -72,7 +75,9 @@ void showMoreOperate(BuildContext context, List<Widget> list) {
                   Container(
                     width: MediaQuery.of(context).size.width,
                     height: 10,
-                    color: ref.watch(themeProvider).themeColor.pinColor(),
+                    color: ref.watch(themeProvider).themeMode == modeDark
+                        ? const Color(0xFF111111)
+                        : const Color(0xFFF5F5F5),
                   ),
                   CupertinoSheer(
                     title: "取消",

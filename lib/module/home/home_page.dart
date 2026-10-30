@@ -397,11 +397,9 @@ class HomePageState extends ConsumerState<HomePage> {
       ),
     );
     titles.add(
-      IndexBean(
-        "assets/images/icon_icloud.png",
-        "assets/images/icon_icloud_checked.png",
-        "YYB-Go",
-      ),
+      "assets/images/icon_icloud.png",
+      "assets/images/icon_icloud_checked.png",
+      "YYB-Go",
     );
     titles.add(
       IndexBean(
