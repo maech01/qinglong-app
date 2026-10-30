@@ -335,23 +335,15 @@ class HomePageState extends ConsumerState<HomePage> {
             ),
             Visibility(
               visible: showMask,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: 5.0,
-                  sigmaY: 5.0,
-                ),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () async {
-                    setState(() {
-                      showMask = false;
-                    });
-                  },
-                  child: Container(
-                    color: ref.watch(themeProvider).themeMode == modeDark
-                        ? Colors.black.withOpacity(0.6)
-                        : Colors.grey.withOpacity(0.6),
-                  ),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () async {
+                  setState(() {
+                    showMask = false;
+                  });
+                },
+                child: Container(
+                  color: Colors.black.withOpacity(0.75),
                 ),
               ),
             ),
@@ -493,8 +485,23 @@ class HomePageState extends ConsumerState<HomePage> {
         constraints:
             BoxConstraints(maxHeight: MediaQuery.of(context).size.height - kToolbarHeight * 2),
         decoration: BoxDecoration(
-          color: ref.watch(themeProvider).themeColor.settingBgColor(),
+          color: ref.watch(themeProvider).themeMode == modeDark
+              ? const Color(0xFF1F1F1F)
+              : const Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: ref.watch(themeProvider).themeMode == modeDark
+                ? const Color(0xFF3A3A3A)
+                : const Color(0xFFE5E5E5),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
         child: SingleChildScrollView(
           child: Column(
